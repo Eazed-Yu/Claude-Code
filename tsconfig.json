@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "outDir": "dist",
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -11,14 +12,13 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": false,
-    "baseUrl": ".",
     "paths": {
       "src/*": [
         "./src/*"
       ]
     },
     "types": [
-      "bun"
+      "bun-types"
     ]
   },
   "include": [
