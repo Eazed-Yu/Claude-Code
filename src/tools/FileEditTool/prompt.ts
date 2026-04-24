@@ -2,7 +2,7 @@ import { isCompactLinePrefixEnabled } from '../../utils/file.js'
 import { FILE_READ_TOOL_NAME } from '../FileReadTool/prompt.js'
 
 function getPreReadInstruction(): string {
-  return `\n- You must use your \`${FILE_READ_TOOL_NAME}\` tool at least once in the conversation before editing. This tool will error if you attempt an edit without reading the file. `
+  return `\n- 在编辑之前，你必须在对话中至少使用一次 \`${FILE_READ_TOOL_NAME}\` 工具。如果在未读取文件的情况下尝试编辑，此工具将报错。 `
 }
 
 export function getEditToolDescription(): string {
@@ -15,14 +15,14 @@ function getDefaultEditDescription(): string {
     : 'spaces + line number + arrow'
   const minimalUniquenessHint =
     process.env.USER_TYPE === 'ant'
-      ? `\n- Use the smallest old_string that's clearly unique — usually 2-4 adjacent lines is sufficient. Avoid including 10+ lines of context when less uniquely identifies the target.`
+      ? `\n- 使用能明确唯一标识目标的最小 old_string——通常 2-4 行相邻内容即可。避免在 10 行以上的上下文中，实际上更少内容就能唯一确定目标时仍大量引用。`
       : ''
-  return `Performs exact string replacements in files.
+  return `对文件执行精确的字符串替换。
 
-Usage:${getPreReadInstruction()}
-- When editing text from Read tool output, ensure you preserve the exact indentation (tabs/spaces) as it appears AFTER the line number prefix. The line number prefix format is: ${prefixFormat}. Everything after that is the actual file content to match. Never include any part of the line number prefix in the old_string or new_string.
-- ALWAYS prefer editing existing files in the codebase. NEVER write new files unless explicitly required.
-- Only use emojis if the user explicitly requests it. Avoid adding emojis to files unless asked.
-- The edit will FAIL if \`old_string\` is not unique in the file. Either provide a larger string with more surrounding context to make it unique or use \`replace_all\` to change every instance of \`old_string\`.${minimalUniquenessHint}
-- Use \`replace_all\` for replacing and renaming strings across the file. This parameter is useful if you want to rename a variable for instance.`
+用法：${getPreReadInstruction()}
+- 编辑 Read 工具输出的文本时，请确保保留行号前缀之后的确切缩进（制表符/空格）。行号前缀格式为：${prefixFormat}。该前缀之后的所有内容才是实际的文件内容。old_string 或 new_string 中永远不要包含行号前缀的任何部分。
+- 始终优先编辑代码库中的现有文件。除非明确需要，否则绝不创建新文件。
+- 除非用户明确要求，否则不要使用表情符号。避免向文件添加表情符号，除非被要求。
+- 如果 \`old_string\` 在文件中不唯一，编辑将失败。请提供包含更多周围上下文的更大字符串以确保唯一性，或使用 \`replace_all\` 替换所有 \`old_string\` 出现的位置。${minimalUniquenessHint}
+- 使用 \`replace_all\` 在整个文件中替换和重命名字符串。例如，当你想重命名一个变量时，此参数非常有用。`
 }

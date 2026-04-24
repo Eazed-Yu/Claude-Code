@@ -27,20 +27,20 @@ function getBackgroundUsageNote(): string | null {
   if (isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_BACKGROUND_TASKS)) {
     return null
   }
-  return `  - You can use the \`run_in_background\` parameter to run the command in the background. Only use this if you don't need the result immediately and are OK being notified when the command completes later. You do not need to check the output right away - you'll be notified when it finishes.`
+  return `  - 你可以使用 \`run_in_background\` 参数在后台运行命令。仅当你不需要立即获取结果且愿意在命令完成后再收到通知时才使用此选项。你不需要立即检查输出——命令完成时你会收到通知。`
 }
 
 function getSleepGuidance(): string | null {
   if (isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_BACKGROUND_TASKS)) {
     return null
   }
-  return `  - Avoid unnecessary \`Start-Sleep\` commands:
-    - Do not sleep between commands that can run immediately — just run them.
-    - If your command is long running and you would like to be notified when it finishes — simply run your command using \`run_in_background\`. There is no need to sleep in this case.
-    - Do not retry failing commands in a sleep loop — diagnose the root cause or consider an alternative approach.
-    - If waiting for a background task you started with \`run_in_background\`, you will be notified when it completes — do not poll.
-    - If you must poll an external process, use a check command rather than sleeping first.
-    - If you must sleep, keep the duration short (1-5 seconds) to avoid blocking the user.`
+  return `  - 避免不必要的 \`Start-Sleep\` 命令：
+    - 不要在可以立即运行的命令之间加入等待——直接运行即可。
+    - 如果你的命令耗时较长，希望在完成时得到通知——只需使用 \`run_in_background\` 运行命令即可。这种情况下无需休眠。
+    - 不要在循环中用休眠重试失败的命令——先诊断根本原因，或考虑替代方案。
+    - 如果在等待用 \`run_in_background\` 启动的后台任务，完成时你会收到通知——不要轮询。
+    - 如果必须轮询外部进程，请使用检查命令而不是先休眠。
+    - 如果必须休眠，请保持时间较短（1-5 秒），以避免阻塞用户。`
 }
 
 /**
@@ -50,24 +50,24 @@ function getSleepGuidance(): string | null {
  */
 function getEditionSection(edition: PowerShellEdition | null): string {
   if (edition === 'desktop') {
-    return `PowerShell edition: Windows PowerShell 5.1 (powershell.exe)
-   - Pipeline chain operators \`&&\` and \`||\` are NOT available — they cause a parser error. To run B only if A succeeds: \`A; if ($?) { B }\`. To chain unconditionally: \`A; B\`.
-   - Ternary (\`?:\`), null-coalescing (\`??\`), and null-conditional (\`?.\`) operators are NOT available. Use \`if/else\` and explicit \`$null -eq\` checks instead.
-   - Avoid \`2>&1\` on native executables. In 5.1, redirecting a native command's stderr inside PowerShell wraps each line in an ErrorRecord (NativeCommandError) and sets \`$?\` to \`$false\` even when the exe returned exit code 0. stderr is already captured for you — don't redirect it.
-   - Default file encoding is UTF-16 LE (with BOM). When writing files other tools will read, pass \`-Encoding utf8\` to \`Out-File\`/\`Set-Content\`.
-   - \`ConvertFrom-Json\` returns a PSCustomObject, not a hashtable. \`-AsHashtable\` is not available.`
+    return `PowerShell 版本：Windows PowerShell 5.1 (powershell.exe)
+   - 管道链操作符 \`&&\` 和 \`||\` 不可用——它们会导致解析错误。要在 A 成功时才运行 B：\`A; if ($?) { B }\`。无条件链式运行：\`A; B\`。
+   - 三元运算符（\`?:\`）、空合并（\`??\`）和空条件（\`?.\`）运算符不可用。请改用 \`if/else\` 和显式的 \`$null -eq\` 检查。
+   - 避免在原生可执行文件上使用 \`2>&1\`。在 5.1 中，在 PowerShell 内部重定向原生命令的 stderr 会将每行包装为 ErrorRecord（NativeCommandError），并将 \`$?\` 设为 \`$false\`，即使 exe 返回了退出码 0。stderr 已为你捕获——不要重定向它。
+   - 默认文件编码为 UTF-16 LE（带 BOM）。写入其他工具将读取的文件时，向 \`Out-File\`/\`Set-Content\` 传入 \`-Encoding utf8\`。
+   - \`ConvertFrom-Json\` 返回 PSCustomObject，而非哈希表。\`-AsHashtable\` 不可用。`
   }
   if (edition === 'core') {
-    return `PowerShell edition: PowerShell 7+ (pwsh)
-   - Pipeline chain operators \`&&\` and \`||\` ARE available and work like bash. Prefer \`cmd1 && cmd2\` over \`cmd1; cmd2\` when cmd2 should only run if cmd1 succeeds.
-   - Ternary (\`$cond ? $a : $b\`), null-coalescing (\`??\`), and null-conditional (\`?.\`) operators are available.
-   - Default file encoding is UTF-8 without BOM.`
+    return `PowerShell 版本：PowerShell 7+（pwsh）
+   - 管道链操作符 \`&&\` 和 \`||\` 可用，与 bash 类似。当 cmd2 仅在 cmd1 成功时才运行时，优先使用 \`cmd1 && cmd2\` 而非 \`cmd1; cmd2\`。
+   - 三元运算符（\`$cond ? $a : $b\`）、空合并（\`??\`）和空条件（\`?.\`）运算符可用。
+   - 默认文件编码为无 BOM 的 UTF-8。`
   }
   // Detection not yet resolved (first prompt build before any tool call) or
   // PS not installed. Give the conservative 5.1-safe guidance.
-  return `PowerShell edition: unknown — assume Windows PowerShell 5.1 for compatibility
-   - Do NOT use \`&&\`, \`||\`, ternary \`?:\`, null-coalescing \`??\`, or null-conditional \`?.\`. These are PowerShell 7+ only and parser-error on 5.1.
-   - To chain commands conditionally: \`A; if ($?) { B }\`. Unconditionally: \`A; B\`.`
+  return `PowerShell 版本：未知——出于兼容性考虑，假设为 Windows PowerShell 5.1
+   - 不要使用 \`&&\`、\`||\`、三元运算符 \`?:\`、空合并 \`??\` 或空条件 \`?.\`。这些仅适用于 PowerShell 7+，在 5.1 上会导致解析错误。
+   - 条件链式命令：\`A; if ($?) { B }\`。无条件链式运行：\`A; B\`。`
 }
 
 export async function getPrompt(): Promise<string> {
@@ -75,71 +75,71 @@ export async function getPrompt(): Promise<string> {
   const sleepGuidance = getSleepGuidance()
   const edition = await getPowerShellEdition()
 
-  return `Executes a given PowerShell command with optional timeout. Working directory persists between commands; shell state (variables, functions) does not.
+  return `执行指定的 PowerShell 命令，支持可选超时。工作目录在命令之间持久保留；shell 状态（变量、函数）不保留。
 
-IMPORTANT: This tool is for terminal operations via PowerShell: git, npm, docker, and PS cmdlets. DO NOT use it for file operations (reading, writing, editing, searching, finding files) - use the specialized tools for this instead.
+重要提示：此工具用于通过 PowerShell 进行终端操作：git、npm、docker 和 PS cmdlet。不要用它进行文件操作（读取、写入、编辑、搜索、查找文件）——请为此使用专用工具。
 
 ${getEditionSection(edition)}
 
-Before executing the command, please follow these steps:
+执行命令前，请遵循以下步骤：
 
-1. Directory Verification:
-   - If the command will create new directories or files, first use \`Get-ChildItem\` (or \`ls\`) to verify the parent directory exists and is the correct location
+1. 目录验证：
+   - 如果命令将创建新目录或文件，请先使用 \`Get-ChildItem\`（或 \`ls\`）验证父目录存在且位置正确
 
-2. Command Execution:
-   - Always quote file paths that contain spaces with double quotes
-   - Capture the output of the command.
+2. 命令执行：
+   - 始终用双引号引用包含空格的文件路径
+   - 捕获命令的输出。
 
-PowerShell Syntax Notes:
-   - Variables use $ prefix: $myVar = "value"
-   - Escape character is backtick (\`), not backslash
-   - Use Verb-Noun cmdlet naming: Get-ChildItem, Set-Location, New-Item, Remove-Item
-   - Common aliases: ls (Get-ChildItem), cd (Set-Location), cat (Get-Content), rm (Remove-Item)
-   - Pipe operator | works similarly to bash but passes objects, not text
-   - Use Select-Object, Where-Object, ForEach-Object for filtering and transformation
-   - String interpolation: "Hello $name" or "Hello $($obj.Property)"
-   - Registry access uses PSDrive prefixes: \`HKLM:\\SOFTWARE\\...\`, \`HKCU:\\...\` — NOT raw \`HKEY_LOCAL_MACHINE\\...\`
-   - Environment variables: read with \`$env:NAME\`, set with \`$env:NAME = "value"\` (NOT \`Set-Variable\` or bash \`export\`)
-   - Call native exe with spaces in path via call operator: \`& "C:\\Program Files\\App\\app.exe" arg1 arg2\`
+PowerShell 语法说明：
+   - 变量使用 $ 前缀：$myVar = "value"
+   - 转义字符是反引号（\`），而非反斜杠
+   - 使用 Verb-Noun cmdlet 命名：Get-ChildItem、Set-Location、New-Item、Remove-Item
+   - 常用别名：ls（Get-ChildItem）、cd（Set-Location）、cat（Get-Content）、rm（Remove-Item）
+   - 管道操作符 | 与 bash 类似，但传递对象而非文本
+   - 使用 Select-Object、Where-Object、ForEach-Object 进行过滤和转换
+   - 字符串插值："Hello $name" 或 "Hello $($obj.Property)"
+   - 注册表访问使用 PSDrive 前缀：\`HKLM:\\SOFTWARE\\...\`、\`HKCU:\\...\`——不要使用原始的 \`HKEY_LOCAL_MACHINE\\...\`
+   - 环境变量：使用 \`$env:NAME\` 读取，使用 \`$env:NAME = "value"\` 设置（不要使用 \`Set-Variable\` 或 bash 的 \`export\`）
+   - 调用路径中有空格的原生 exe，使用调用操作符：\`& "C:\\Program Files\\App\\app.exe" arg1 arg2\`
 
-Interactive and blocking commands (will hang — this tool runs with -NonInteractive):
-   - NEVER use \`Read-Host\`, \`Get-Credential\`, \`Out-GridView\`, \`$Host.UI.PromptForChoice\`, or \`pause\`
-   - Destructive cmdlets (\`Remove-Item\`, \`Stop-Process\`, \`Clear-Content\`, etc.) may prompt for confirmation. Add \`-Confirm:$false\` when you intend the action to proceed. Use \`-Force\` for read-only/hidden items.
-   - Never use \`git rebase -i\`, \`git add -i\`, or other commands that open an interactive editor
+交互式和阻塞命令（会挂起——此工具以 -NonInteractive 运行）：
+   - 绝不使用 \`Read-Host\`、\`Get-Credential\`、\`Out-GridView\`、\`$Host.UI.PromptForChoice\` 或 \`pause\`
+   - 破坏性 cmdlet（\`Remove-Item\`、\`Stop-Process\`、\`Clear-Content\` 等）可能会提示确认。当你希望操作继续时，添加 \`-Confirm:$false\`。对只读/隐藏项目使用 \`-Force\`。
+   - 绝不使用 \`git rebase -i\`、\`git add -i\` 或其他会打开交互式编辑器的命令
 
-Passing multiline strings (commit messages, file content) to native executables:
-   - Use a single-quoted here-string so PowerShell does not expand \`$\` or backticks inside. The closing \`'@\` MUST be at column 0 (no leading whitespace) on its own line — indenting it is a parse error:
+向原生可执行文件传递多行字符串（提交消息、文件内容）：
+   - 使用单引号 here-string，这样 PowerShell 不会展开内部的 \`$\` 或反引号。结束标记 \`'@\` 必须在第 0 列（无前导空格），单独成行——缩进会导致解析错误：
 <example>
 git commit -m @'
 Commit message here.
 Second line with $literal dollar signs.
 '@
 </example>
-   - Use \`@'...'@\` (single-quoted, literal) not \`@"..."@\` (double-quoted, interpolated) unless you need variable expansion
-   - For arguments containing \`-\`, \`@\`, or other characters PowerShell parses as operators, use the stop-parsing token: \`git log --% --format=%H\`
+   - 使用 \`@'...'@\`（单引号，字面量）而非 \`@"..."@\`（双引号，插值），除非你需要变量展开
+   - 对于包含 \`-\`、\`@\` 或其他 PowerShell 解析为操作符的字符的参数，使用停止解析标记：\`git log --% --format=%H\`
 
-Usage notes:
-  - The command argument is required.
-  - You can specify an optional timeout in milliseconds (up to ${getMaxTimeoutMs()}ms / ${getMaxTimeoutMs() / 60000} minutes). If not specified, commands will timeout after ${getDefaultTimeoutMs()}ms (${getDefaultTimeoutMs() / 60000} minutes).
-  - It is very helpful if you write a clear, concise description of what this command does.
-  - If the output exceeds ${getMaxOutputLength()} characters, output will be truncated before being returned to you.
+使用说明：
+  - command 参数为必填。
+  - 你可以指定可选超时（毫秒）（最长 ${getMaxTimeoutMs()}ms / ${getMaxTimeoutMs() / 60000} 分钟）。如果未指定，命令将在 ${getDefaultTimeoutMs()}ms（${getDefaultTimeoutMs() / 60000} 分钟）后超时。
+  - 对命令执行的内容提供清晰简洁的描述非常有帮助。
+  - 如果输出超过 ${getMaxOutputLength()} 个字符，输出将在返回给你之前被截断。
 ${backgroundNote ? backgroundNote + '\n' : ''}\
-  - Avoid using PowerShell to run commands that have dedicated tools, unless explicitly instructed:
-    - File search: Use ${GLOB_TOOL_NAME} (NOT Get-ChildItem -Recurse)
-    - Content search: Use ${GREP_TOOL_NAME} (NOT Select-String)
-    - Read files: Use ${FILE_READ_TOOL_NAME} (NOT Get-Content)
-    - Edit files: Use ${FILE_EDIT_TOOL_NAME}
-    - Write files: Use ${FILE_WRITE_TOOL_NAME} (NOT Set-Content/Out-File)
-    - Communication: Output text directly (NOT Write-Output/Write-Host)
-  - When issuing multiple commands:
-    - If the commands are independent and can run in parallel, make multiple ${POWERSHELL_TOOL_NAME} tool calls in a single message.
-    - If the commands depend on each other and must run sequentially, chain them in a single ${POWERSHELL_TOOL_NAME} call (see edition-specific chaining syntax above).
-    - Use \`;\` only when you need to run commands sequentially but don't care if earlier commands fail.
-    - DO NOT use newlines to separate commands (newlines are ok in quoted strings and here-strings)
-  - Do NOT prefix commands with \`cd\` or \`Set-Location\` -- the working directory is already set to the correct project directory automatically.
+  - 避免使用 PowerShell 运行有专用工具的命令，除非明确被要求：
+    - 文件搜索：使用 ${GLOB_TOOL_NAME}（不要用 Get-ChildItem -Recurse）
+    - 内容搜索：使用 ${GREP_TOOL_NAME}（不要用 Select-String）
+    - 读取文件：使用 ${FILE_READ_TOOL_NAME}（不要用 Get-Content）
+    - 编辑文件：使用 ${FILE_EDIT_TOOL_NAME}
+    - 写入文件：使用 ${FILE_WRITE_TOOL_NAME}（不要用 Set-Content/Out-File）
+    - 通信：直接输出文字（不要用 Write-Output/Write-Host）
+  - 发出多条命令时：
+    - 如果命令相互独立可以并行运行，在单条消息中进行多次 ${POWERSHELL_TOOL_NAME} 工具调用。
+    - 如果命令相互依赖必须顺序运行，在单次 ${POWERSHELL_TOOL_NAME} 调用中链式执行（参见上方版本特定的链式语法）。
+    - 仅当需要顺序运行但不关心前面命令是否失败时才使用 \`;\`。
+    - 不要用换行符分隔命令（换行在引号字符串和 here-string 中是可以的）
+  - 不要在命令前加 \`cd\` 或 \`Set-Location\`——工作目录已自动设置为正确的项目目录。
 ${sleepGuidance ? sleepGuidance + '\n' : ''}\
-  - For git commands:
-    - Prefer to create a new commit rather than amending an existing commit.
-    - Before running destructive operations (e.g., git reset --hard, git push --force, git checkout --), consider whether there is a safer alternative that achieves the same goal. Only use destructive operations when they are truly the best approach.
-    - Never skip hooks (--no-verify) or bypass signing (--no-gpg-sign, -c commit.gpgsign=false) unless the user has explicitly asked for it. If a hook fails, investigate and fix the underlying issue.`
+  - 对于 git 命令：
+    - 优先创建新提交而不是修改已有提交。
+    - 在运行破坏性操作之前（例如 git reset --hard、git push --force、git checkout --），考虑是否有更安全的替代方案能达到相同目标。只在这些操作确实是最佳方法时才使用。
+    - 除非用户明确要求，否则绝不跳过钩子（--no-verify）或绕过签名（--no-gpg-sign、-c commit.gpgsign=false）。如果钩子失败，请调查并修复根本问题。`
 }

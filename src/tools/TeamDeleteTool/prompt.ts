@@ -2,15 +2,15 @@ export function getPrompt(): string {
   return `
 # TeamDelete
 
-Remove team and task directories when the swarm work is complete.
+当群组工作完成后，移除团队和任务目录。
 
-This operation:
-- Removes the team directory (\`~/.claude/teams/{team-name}/\`)
-- Removes the task directory (\`~/.claude/tasks/{team-name}/\`)
-- Clears team context from the current session
+此操作将：
+- 移除团队目录（\`~/.claude/teams/{team-name}/\`）
+- 移除任务目录（\`~/.claude/tasks/{team-name}/\`）
+- 从当前会话中清除团队上下文
 
-**IMPORTANT**: TeamDelete will fail if the team still has active members. Gracefully terminate teammates first, then call TeamDelete after all teammates have shut down.
+**重要提示**：如果团队仍有活跃成员，TeamDelete 将失败。请先优雅地终止所有队友，待所有队友关闭后再调用 TeamDelete。
 
-Use this when all teammates have finished their work and you want to clean up the team resources. The team name is automatically determined from the current session's team context.
+当所有队友都完成了工作，你想清理团队资源时使用此工具。团队名称会自动从当前会话的团队上下文中确定。
 `.trim()
 }

@@ -1,22 +1,22 @@
 export const BRIEF_TOOL_NAME = 'SendUserMessage'
 export const LEGACY_BRIEF_TOOL_NAME = 'Brief'
 
-export const DESCRIPTION = 'Send a message to the user'
+export const DESCRIPTION = '向用户发送消息'
 
-export const BRIEF_TOOL_PROMPT = `Send a message the user will read. Text outside this tool is visible in the detail view, but most won't open it — the answer lives here.
+export const BRIEF_TOOL_PROMPT = `发送一条用户将看到的消息。此工具之外的文字在详情视图中可见，但大多数用户不会打开它——答案在这里。
 
-\`message\` supports markdown. \`attachments\` takes file paths (absolute or cwd-relative) for images, diffs, logs.
+\`message\` 支持 markdown。\`attachments\` 接受图片、差异文件、日志等的文件路径（绝对路径或相对于当前目录的路径）。
 
-\`status\` labels intent: 'normal' when replying to what they just asked; 'proactive' when you're initiating — a scheduled task finished, a blocker surfaced during background work, you need input on something they haven't asked about. Set it honestly; downstream routing uses it.`
+\`status\` 标注意图：回复用户刚才提问时用 'normal'；主动发起时用 'proactive'——例如定时任务已完成、后台工作中发现了阻碍、需要就用户未询问的事项获取输入。请如实设置；下游路由会根据此值处理。`
 
-export const BRIEF_PROACTIVE_SECTION = `## Talking to the user
+export const BRIEF_PROACTIVE_SECTION = `## 与用户沟通
 
-${BRIEF_TOOL_NAME} is where your replies go. Text outside it is visible if the user expands the detail view, but most won't — assume unread. Anything you want them to actually see goes through ${BRIEF_TOOL_NAME}. The failure mode: the real answer lives in plain text while ${BRIEF_TOOL_NAME} just says "done!" — they see "done!" and miss everything.
+${BRIEF_TOOL_NAME} 是发送回复的地方。工具之外的文字在用户展开详情视图时才能看到，但大多数人不会这么做——默认视为未读。凡是你希望用户真正看到的内容，都要通过 ${BRIEF_TOOL_NAME} 发送。常见错误：真正的答案藏在纯文本里，而 ${BRIEF_TOOL_NAME} 只说了"完成！"——用户只看到"完成！"，错过了一切。
 
-So: every time the user says something, the reply they actually read comes through ${BRIEF_TOOL_NAME}. Even for "hi". Even for "thanks".
+因此：每当用户说了什么，他们实际读到的回复都要通过 ${BRIEF_TOOL_NAME} 发送。哪怕是"你好"，哪怕是"谢谢"。
 
-If you can answer right away, send the answer. If you need to go look — run a command, read files, check something — ack first in one line ("On it — checking the test output"), then work, then send the result. Without the ack they're staring at a spinner.
+如果能立即回答，就直接给出答案。如果需要先查看——运行命令、读取文件、检查某些内容——先用一行文字回应（"好的，正在检查测试输出"），然后去工作，再发送结果。没有这个回应，用户就只能盯着转圈图标等待。
 
-For longer work: ack → work → result. Between those, send a checkpoint when something useful happened — a decision you made, a surprise you hit, a phase boundary. Skip the filler ("running tests...") — a checkpoint earns its place by carrying information.
+对于较长的工作：回应 → 工作 → 结果。其间，当有值得记录的事情发生时发送一个检查点——你做出的决策、遇到的意外、阶段性进展。跳过无意义的填充（"正在运行测试……"）——只有携带信息的检查点才有价值。
 
-Keep messages tight — the decision, the file:line, the PR number. Second person always ("your config"), never third.`
+消息要简洁——决策、file:line、PR 编号。始终用第二人称（"你的配置"），不用第三人称。`
